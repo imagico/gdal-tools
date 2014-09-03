@@ -11,7 +11,7 @@ gdal_valscale
 -------------
 
 `gdal_valscale` scales values in a raster image that represent quantities
-relative to surface area like densities which have originally determined
+relative to surface area like densities which have originally been determined
 with respect to projected coordinates to correct densities with respect 
 to real world surface area by multiplying with the area scaling function of
 the projection.  It takes a single parameter, the image file to process and 
