@@ -3,7 +3,7 @@
    ------------------------------------------------------------------------
     gdal_maskbuffer - buffers a raster mask in projected coordinates by 
                       a distance in real world units
-    Copyright (C) 2014 Christoph Hormann <chris_hormann@gmx.de>
+    Copyright (C) 2015 Christoph Hormann <chris_hormann@gmx.de>
    ------------------------------------------------------------------------
 
     This file is part of gdal_maskbuffer
@@ -24,11 +24,12 @@
     Version history:
 
       0.1: initial public version, September 2014
+      0.1.1: bugfix, June 2015
 
    ========================================================================
  */
 
-const char PROGRAM_TITLE[] = "gdal_maskbuffer 0.1";
+const char PROGRAM_TITLE[] = "gdal_maskbuffer 0.1.1";
 
 #include <cstdlib>
 #include <fstream>
@@ -41,7 +42,6 @@ const char PROGRAM_TITLE[] = "gdal_maskbuffer 0.1";
 #include <projects.h>
 #include <proj_api.h>
 
-#define cimg_use_magick 1
 #define cimg_use_tiff 1
 #define cimg_use_png 1
 #define cimg_display 0
@@ -55,7 +55,7 @@ int main(int argc,char **argv)
 {
 	std::fprintf(stderr,"%s\n", PROGRAM_TITLE);
 	std::fprintf(stderr,"-------------------------------------------------------\n");
-	std::fprintf(stderr,"Copyright (C) 2014 Christoph Hormann\n");
+	std::fprintf(stderr,"Copyright (C) 2015 Christoph Hormann\n");
 	std::fprintf(stderr,"This program comes with ABSOLUTELY NO WARRANTY;\n");
 	std::fprintf(stderr,"This is free software, and you are welcome to redistribute\n");
 	std::fprintf(stderr,"it under certain conditions; see COPYING for details.\n");
@@ -147,7 +147,7 @@ int main(int argc,char **argv)
 	size_t cnterr = 0;
 	size_t cntmod = 0;
 
-	double pixel_size = 0.5*(std::abs(adfGeoTransform[2])+std::abs(adfGeoTransform[5]));
+	double pixel_size = 0.5*(std::abs(adfGeoTransform[1])+std::abs(adfGeoTransform[5]));
 
 	for (size_t py = 0; py < nYSize; py++)
 	{

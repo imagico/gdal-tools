@@ -1,5 +1,5 @@
 # makefile for gdal-tools
-# Copyright (C) 2014 Christoph Hormann <chris_hormann@gmx.de>
+# Copyright (C) 2014-2015 Christoph Hormann <chris_hormann@gmx.de>
 
 CC=gcc
 CXX=g++
@@ -7,12 +7,12 @@ CXX=g++
 ARCHFLAGS = -g
 
 LDFLAGS = -lm
-LDFLAGS_CIMG = `Magick++-config --ldflags`
+LDFLAGS_CIMG = -ltiff
 LDFLAGS_GDAL = `gdal-config --libs`
 LDFLAGS_PROJ = -lproj
 
 CXXFLAGS = $(ARCHFLAGS)
-CXXFLAGS_CIMG = `Magick++-config --cppflags`
+CXXFLAGS_CIMG = -ltiff
 CXXFLAGS_GDAL  = `gdal-config --cflags`
 
 # ---------------------------------------
@@ -46,6 +46,9 @@ gdal_valscale: gdal_valscale.o
 gdal_maskbuffer: gdal_maskbuffer.o
 	$(CXX) $(LDFLAGS) gdal_maskbuffer.o -o gdal_maskbuffer $(LDFLAGS_GDAL) $(LDFLAGS_CIMG) $(LDFLAGS_PROJ)
 
+gdal_maskcompare: gdal_maskcompare.o
+	$(CXX) $(LDFLAGS) gdal_maskcompare.o -o gdal_maskcompare $(LDFLAGS_GDAL) $(LDFLAGS_CIMG) $(LDFLAGS_PROJ)
+
 # ---------------------------------------
 
 gdal_valscale.o: gdal_valscale.cpp
@@ -53,3 +56,6 @@ gdal_valscale.o: gdal_valscale.cpp
 
 gdal_maskbuffer.o: gdal_maskbuffer.cpp
 	$(CXX) -c $(CXXFLAGS) $(CXXFLAGS_CIMG) $(CXXFLAGS_GDAL) -o gdal_maskbuffer.o gdal_maskbuffer.cpp
+
+gdal_maskcompare.o: gdal_maskcompare.cpp
+	$(CXX) -c $(CXXFLAGS) $(CXXFLAGS_CIMG) $(CXXFLAGS_GDAL) -o gdal_maskcompare.o gdal_maskcompare.cpp

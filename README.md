@@ -36,6 +36,19 @@ does not take into account any periodicity of the projection used.
 Building requires GDAL and Proj4 development packages as well as 
 [CImg](http://cimg.sourceforge.net/).
 
+
+gdal_maskcompare
+---------------
+
+`gdal_maskcompare` performs a weighted comparison of two black/white mask 
+images.  Differences near the mask edge are weighted less than differences
+far away from it.  The purpose of this tool is to perform sanity check for
+the OpenStreetMap coastline processing by detecting larger erroneous 
+modifications but at the same time allowing smaller changes.
+
+Building requires GDAL and Proj4 development packages as well as 
+[CImg](http://cimg.sourceforge.net/).
+
 Licensed under GPLv3.
 
 
