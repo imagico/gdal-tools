@@ -23,11 +23,12 @@
     Version history:
 
       0.1: initial public version, June 2015
+      0.1.1: small change, August 2015
 
    ========================================================================
  */
 
-const char PROGRAM_TITLE[] = "gdal_maskcompare 0.1";
+const char PROGRAM_TITLE[] = "gdal_maskcompare 0.1.1";
 
 #include <cstdlib>
 #include <fstream>
@@ -40,8 +41,6 @@ const char PROGRAM_TITLE[] = "gdal_maskcompare 0.1";
 #include <projects.h>
 #include <proj_api.h>
 
-#define cimg_use_tiff 1
-#define cimg_use_png 1
 #define cimg_display 0
 
 #include "CImg.h"
@@ -182,6 +181,12 @@ int main(int argc,char **argv)
 	double area_wx = 0.0;
 	double area_all = 0.0;
 
+	double min_scale = 1.0e12;
+	double max_scale = -1.0e12;
+
+	double min_ascale = 1.0e12;
+	double max_ascale = -1.0e12;
+
 	for (size_t py = 0; py < nYSize; py++)
 	{
 		for (size_t px = 0; px < nXSize; px++)
@@ -200,6 +205,12 @@ int main(int argc,char **argv)
 			{
 				double scale = std::max(facs.h,facs.k);
 				double ascale = 0.000001*facs.s; // in sqkm/sqm
+
+				min_ascale = std::min(min_scale, facs.s);
+				max_ascale = std::max(max_scale, facs.s);
+
+				min_scale = std::min(min_scale, scale);
+				max_scale = std::max(max_scale, scale);
 
 				area_all += ascale*pixel_size*pixel_size;
 
@@ -251,6 +262,9 @@ int main(int argc,char **argv)
 	}
 
 	double area_weighted = area_l+area_w+3.0*area_lx+10.0*area_wx;
+
+	std::fprintf(stderr,"maximum area scaling: %.4f, minimum: %.4f\n", max_ascale, min_ascale);
+	std::fprintf(stderr,"maximum scaling: %.4f, minimum scaling: %.4f\n", max_scale, min_scale);
 
 	std::fprintf(stderr,"new in mask: %d normal pixel (%.2f sqkm)\n", cnt_l, area_l);
 	std::fprintf(stderr,"             %d isolated pixel (%.2f sqkm)\n", cnt_lx, area_lx);
