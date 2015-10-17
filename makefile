@@ -49,6 +49,9 @@ gdal_maskbuffer: gdal_maskbuffer.o
 gdal_maskcompare: gdal_maskcompare.o
 	$(CXX) $(LDFLAGS) gdal_maskcompare.o -o gdal_maskcompare $(LDFLAGS_GDAL) $(LDFLAGS_CIMG) $(LDFLAGS_PROJ)
 
+gdal_maskcompare_wm: gdal_maskcompare_wm.o
+	$(CXX) $(LDFLAGS) gdal_maskcompare_wm.o -o gdal_maskcompare_wm $(LDFLAGS_GDAL) $(LDFLAGS_CIMG) $(LDFLAGS_PROJ)
+
 # ---------------------------------------
 
 gdal_valscale.o: gdal_valscale.cpp
@@ -59,3 +62,6 @@ gdal_maskbuffer.o: gdal_maskbuffer.cpp
 
 gdal_maskcompare.o: gdal_maskcompare.cpp
 	$(CXX) -c $(CXXFLAGS) $(CXXFLAGS_CIMG) $(CXXFLAGS_GDAL) -o gdal_maskcompare.o gdal_maskcompare.cpp
+
+gdal_maskcompare_wm.o: gdal_maskcompare_wm.cpp
+	$(CXX) -c $(CXXFLAGS) $(CXXFLAGS_CIMG) $(CXXFLAGS_GDAL) -o gdal_maskcompare_wm.o gdal_maskcompare_wm.cpp

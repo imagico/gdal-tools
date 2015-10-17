@@ -1,34 +1,34 @@
 /* ========================================================================
-    File: @(#)gdal_maskcompare.cpp
+    File: @(#)gdal_maskcompare_wm.cpp
    ------------------------------------------------------------------------
     gdal_maskcompare - compares two mask files and rates differences
+    web mercator version without proj4 dependecy
     Copyright (C) 2015 Christoph Hormann <chris_hormann@gmx.de>
    ------------------------------------------------------------------------
 
-    This file is part of gdal_maskcompare
+    This file is part of gdal_maskcompare_wm
 
-    gdal_maskcompare is free software: you can redistribute it and/or modify
+    gdal_maskcompare_wm is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    gdal_maskcompare is distributed in the hope that it will be useful,
+    gdal_maskcompare_wm is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with gdal_maskcompare.  If not, see <http://www.gnu.org/licenses/>.
+    along with gdal_maskcompare_wm.  If not, see <http://www.gnu.org/licenses/>.
 
     Version history:
 
-      0.1: initial public version, June 2015
-      0.1.1: small change, August 2015
+      0.1: initial version based on gdal_maskcompare, October 2015
 
    ========================================================================
  */
 
-const char PROGRAM_TITLE[] = "gdal_maskcompare 0.1.1";
+const char PROGRAM_TITLE[] = "gdal_maskcompare_wm 0.1";
 
 #include <cstdlib>
 #include <fstream>
@@ -38,15 +38,13 @@ const char PROGRAM_TITLE[] = "gdal_maskcompare 0.1.1";
 #include <gdal_priv.h>
 #include <ogrsf_frmts.h>
 
-#include <projects.h>
-#include <proj_api.h>
-
 #define cimg_display 0
 
 #include "CImg.h"
 
 using namespace cimg_library;
 
+const double EarthRadius = 6378137.0;
 
 int main(int argc,char **argv)
 {
@@ -114,30 +112,6 @@ int main(int argc,char **argv)
 		std::exit(1);
 	}
 
-	OGRSpatialReference *oSRS = (OGRSpatialReference*)OSRNewSpatialReference(poDataset_ref->GetProjectionRef()); 
-
-	char *str_proj4;
-	oSRS->exportToProj4(&str_proj4);
-
-	projPJ Proj = pj_init_plus(str_proj4);
-
-	if (!Proj)
-	{
-		std::fprintf(stderr,"  Initializing projection in Proj4 failed.\n\n");
-		std::exit(1);
-	}
-
-	double pixel_size = 0.5*(std::abs(adfGeoTransform[1])+std::abs(adfGeoTransform[5]));
-
-	std::fprintf(stderr,"  proj4: %s\n", str_proj4);
-	std::fprintf(stderr,"  pixel size: %.2f m\n", pixel_size);
-
-	if (!Proj->inv)
-	{
-		std::fprintf(stderr,"  inverse not known for projection.\n\n");
-		std::exit(1);
-	}
-
 	std::fprintf(stderr,"  allocating images (%dx%d)...\n", nXSize, nYSize);
 
 	CImg<unsigned char> img_ref = CImg<unsigned char>(nXSize,nYSize,1,1);
@@ -168,6 +142,8 @@ int main(int argc,char **argv)
 		img_dist2 = img_ref.get_distance(0);
 	}
 
+	double pixel_size = 2.0*cimg::PI*EarthRadius/img.width();
+
 	std::fprintf(stderr,"  analyzing...\n");
 
 	size_t cnterr = 0;
@@ -189,73 +165,52 @@ int main(int argc,char **argv)
 
 	for (size_t py = 0; py < nYSize; py++)
 	{
+		double y = pixel_size*(0.5+py-img.height()/2);
+		double scale = std::cosh(y/6378137.0);
+		double ascale = 0.000001*scale*scale; // in sqkm/sqm
+
+		min_ascale = std::min(min_ascale, ascale*1000*1000);
+		max_ascale = std::max(max_ascale, ascale*1000*1000);
+
+		min_scale = std::min(min_scale, scale);
+		max_scale = std::max(max_scale, scale);
+
 		for (size_t px = 0; px < nXSize; px++)
 		{
-			projUV dat_xy;
-			struct FACTORS facs;
+			area_all += ascale*pixel_size*pixel_size;
 
-			dat_xy.u = adfGeoTransform[0] + adfGeoTransform[1] * (0.5+px) + adfGeoTransform[2] * (0.5+py);
-			dat_xy.v = adfGeoTransform[3] + adfGeoTransform[4] * (0.5+px) + adfGeoTransform[5] * (0.5+py);
-
-			projUV dat_ll = pj_inv(dat_xy, Proj);
-
-			int facs_bad = pj_factors(dat_ll, Proj, 0.0, &facs);
-
-			if (!facs_bad)
+			if (img(px,py) == 255)
 			{
-				double scale = std::max(facs.h,facs.k);
-				double ascale = 0.000001*facs.s; // in sqkm/sqm
-
-				min_ascale = std::min(min_ascale, facs.s);
-				max_ascale = std::max(max_ascale, facs.s);
-
-				min_scale = std::min(min_scale, scale);
-				max_scale = std::max(max_scale, scale);
-
-				area_all += ascale*pixel_size*pixel_size;
-
-				if (img(px,py) == 255)
+				// new in mask pixel
+				if (img_ref(px,py) == 0)
 				{
-					// new in mask pixel
-					if (img_ref(px,py) == 0)
+					if (img_dist2(px,py) < scale*std::abs(radius)/pixel_size)
 					{
-						if (img_dist2(px,py) < scale*std::abs(radius)/pixel_size)
-						{
-							cnt_l++;
-							area_l += ascale*pixel_size*pixel_size;
-						}
-						else
-						{
-							cnt_lx++;
-							area_lx += ascale*pixel_size*pixel_size;
-						}
+						cnt_l++;
+						area_l += ascale*pixel_size*pixel_size;
 					}
-				}
-				else
-				{
-					// new out of mask pixel
-					if (img_ref(px,py) == 255)
+					else
 					{
-						if (img_dist1(px,py) < scale*std::abs(radius)/pixel_size)
-						{
-							cnt_w++;
-							area_w += ascale*pixel_size*pixel_size;
-						}
-						else
-						{
-							cnt_wx++;
-							area_wx += ascale*pixel_size*pixel_size;
-						}
+						cnt_lx++;
+						area_lx += ascale*pixel_size*pixel_size;
 					}
 				}
 			}
-			else if (cnterr < 1000)
+			else
 			{
-				std::fprintf(stderr,"    failure to get scaling factor for %.2f/%.2f\n", dat_xy.u, dat_xy.v);
-				cnterr++;
-				if (cnterr == 1000)
+				// new out of mask pixel
+				if (img_ref(px,py) == 255)
 				{
-					std::fprintf(stderr,"    more than 1000 errors - not showing further errors.\n");
+					if (img_dist1(px,py) < scale*std::abs(radius)/pixel_size)
+					{
+						cnt_w++;
+						area_w += ascale*pixel_size*pixel_size;
+					}
+					else
+					{
+						cnt_wx++;
+						area_wx += ascale*pixel_size*pixel_size;
+						}
 				}
 			}
 		}
