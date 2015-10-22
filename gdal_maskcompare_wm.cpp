@@ -24,11 +24,12 @@
     Version history:
 
       0.1: initial version based on gdal_maskcompare, October 2015
+      0.2: fix scale factor compensation going the wrong way, October 2015
 
    ========================================================================
  */
 
-const char PROGRAM_TITLE[] = "gdal_maskcompare_wm 0.1";
+const char PROGRAM_TITLE[] = "gdal_maskcompare_wm 0.2";
 
 #include <cstdlib>
 #include <fstream>
@@ -167,17 +168,17 @@ int main(int argc,char **argv)
 	{
 		double y = pixel_size*(0.5+py-img.height()/2);
 		double scale = std::cosh(y/6378137.0);
-		double ascale = 0.000001*scale*scale; // in sqkm/sqm
+		double ascale = scale*scale*1000*1000; // in sqm/sqkm
 
-		min_ascale = std::min(min_ascale, ascale*1000*1000);
-		max_ascale = std::max(max_ascale, ascale*1000*1000);
+		min_ascale = std::min(min_ascale, ascale*0.000001);
+		max_ascale = std::max(max_ascale, ascale*0.000001);
 
 		min_scale = std::min(min_scale, scale);
 		max_scale = std::max(max_scale, scale);
 
 		for (size_t px = 0; px < nXSize; px++)
 		{
-			area_all += ascale*pixel_size*pixel_size;
+			area_all += pixel_size*pixel_size/ascale;
 
 			if (img(px,py) == 255)
 			{
@@ -187,12 +188,12 @@ int main(int argc,char **argv)
 					if (img_dist2(px,py) < scale*std::abs(radius)/pixel_size)
 					{
 						cnt_l++;
-						area_l += ascale*pixel_size*pixel_size;
+						area_l += pixel_size*pixel_size/ascale;
 					}
 					else
 					{
 						cnt_lx++;
-						area_lx += ascale*pixel_size*pixel_size;
+						area_lx += pixel_size*pixel_size/ascale;
 					}
 				}
 			}
@@ -204,12 +205,12 @@ int main(int argc,char **argv)
 					if (img_dist1(px,py) < scale*std::abs(radius)/pixel_size)
 					{
 						cnt_w++;
-						area_w += ascale*pixel_size*pixel_size;
+						area_w += pixel_size*pixel_size/ascale;
 					}
 					else
 					{
 						cnt_wx++;
-						area_wx += ascale*pixel_size*pixel_size;
+						area_wx += pixel_size*pixel_size/ascale;
 						}
 				}
 			}
@@ -225,7 +226,7 @@ int main(int argc,char **argv)
 	std::fprintf(stderr,"             %d isolated pixel (%.2f sqkm)\n", cnt_lx, area_lx);
 	std::fprintf(stderr,"new out of mask: %d normal pixel (%.2f sqkm)\n", cnt_w, area_w);
 	std::fprintf(stderr,"                 %d isolated pixel (%.2f sqkm)\n", cnt_wx, area_wx);
-	std::fprintf(stderr,"difference rating: %.8f (%.2f sqkm)\n", area_weighted/area_all, area_weighted);
-	std::fprintf(stdout,"short version: %d:%.2f:%d:%.2f:%d:%.2f:%d:%.2f:%.8f:%.2f\n", cnt_l, area_l, cnt_lx, area_lx, cnt_w, area_w, cnt_wx, area_wx, area_weighted/area_all, area_weighted);
+	std::fprintf(stderr,"difference rating: %.9f (%.2f sqkm)\n", area_weighted/area_all, area_weighted);
+	std::fprintf(stdout,"short version: %d:%.2f:%d:%.2f:%d:%.2f:%d:%.2f:%.9f:%.2f\n", cnt_l, area_l, cnt_lx, area_lx, cnt_w, area_w, cnt_wx, area_wx, area_weighted/area_all, area_weighted);
 
 }

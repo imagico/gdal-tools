@@ -24,11 +24,12 @@
 
       0.1: initial public version, June 2015
       0.1.1: small change, August 2015
+      0.2: fix scale factor compensation going the wrong way, October 2015
 
    ========================================================================
  */
 
-const char PROGRAM_TITLE[] = "gdal_maskcompare 0.1.1";
+const char PROGRAM_TITLE[] = "gdal_maskcompare 0.2";
 
 #include <cstdlib>
 #include <fstream>
@@ -204,7 +205,7 @@ int main(int argc,char **argv)
 			if (!facs_bad)
 			{
 				double scale = std::max(facs.h,facs.k);
-				double ascale = 0.000001*facs.s; // in sqkm/sqm
+				double ascale = facs.s*1000*1000; // in sqm/sqkm
 
 				min_ascale = std::min(min_ascale, facs.s);
 				max_ascale = std::max(max_ascale, facs.s);
@@ -212,7 +213,7 @@ int main(int argc,char **argv)
 				min_scale = std::min(min_scale, scale);
 				max_scale = std::max(max_scale, scale);
 
-				area_all += ascale*pixel_size*pixel_size;
+				area_all += pixel_size*pixel_size/ascale;
 
 				if (img(px,py) == 255)
 				{
@@ -222,12 +223,12 @@ int main(int argc,char **argv)
 						if (img_dist2(px,py) < scale*std::abs(radius)/pixel_size)
 						{
 							cnt_l++;
-							area_l += ascale*pixel_size*pixel_size;
+							area_l += pixel_size*pixel_size/ascale;
 						}
 						else
 						{
 							cnt_lx++;
-							area_lx += ascale*pixel_size*pixel_size;
+							area_lx += pixel_size*pixel_size/ascale;
 						}
 					}
 				}
@@ -239,12 +240,12 @@ int main(int argc,char **argv)
 						if (img_dist1(px,py) < scale*std::abs(radius)/pixel_size)
 						{
 							cnt_w++;
-							area_w += ascale*pixel_size*pixel_size;
+							area_w += pixel_size*pixel_size/ascale;
 						}
 						else
 						{
 							cnt_wx++;
-							area_wx += ascale*pixel_size*pixel_size;
+							area_wx += pixel_size*pixel_size/ascale;
 						}
 					}
 				}
