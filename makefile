@@ -6,22 +6,24 @@ CXX=g++
 
 ARCHFLAGS = -g
 
-LDFLAGS = -lm
+LDFLAGS = -lm -pthread
 LDFLAGS_CIMG = -ltiff
 LDFLAGS_GDAL = `gdal-config --libs`
 LDFLAGS_PROJ = -lproj
 
-CXXFLAGS = $(ARCHFLAGS)
+CXXFLAGS = $(ARCHFLAGS) -pthread
 CXXFLAGS_CIMG = -ltiff
 CXXFLAGS_GDAL  = `gdal-config --cflags`
 
+ALL := gdal_valscale gdal_maskbuffer gdal_maskcompare gdal_maskcompare_wm
+
 # ---------------------------------------
 
-all: gdal_valscale gdal_maskbuffer
+all: $(ALL)
 
 clean:
 	rm -f *.o
-	rm -f gdal_valscale gdal_maskbuffer
+	rm -f $(ALL)
 
 test:
 	@echo "This test requires ImageMagick."
