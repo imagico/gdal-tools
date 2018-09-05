@@ -147,7 +147,6 @@ int main(int argc,char **argv)
 
 	std::fprintf(stderr,"  analyzing...\n");
 
-	size_t cnterr = 0;
 	size_t cnt_l = 0;
 	size_t cnt_w = 0;
 	size_t cnt_lx = 0;

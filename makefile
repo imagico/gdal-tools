@@ -11,7 +11,7 @@ LDFLAGS_CIMG = -ltiff
 LDFLAGS_GDAL = `gdal-config --libs`
 LDFLAGS_PROJ = -lproj
 
-CXXFLAGS = $(ARCHFLAGS) -pthread
+CXXFLAGS = $(ARCHFLAGS) -pthread -Wall -Wextra
 CXXFLAGS_CIMG = -ltiff
 CXXFLAGS_GDAL  = `gdal-config --cflags`
 

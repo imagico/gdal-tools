@@ -1,0 +1,5 @@
+gdal_maskbuffer
+gdal_maskcompare
+gdal_maskcompare_wm
+gdal_valscale
+*.o
