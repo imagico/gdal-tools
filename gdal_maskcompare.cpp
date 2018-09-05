@@ -148,14 +148,18 @@ int main(int argc,char **argv)
 
 	std::fprintf(stderr,"  reading data...\n");
 
-	poBand_ref->RasterIO( GF_Read, 0, 0, nXSize, nYSize, 
-												img_ref.data(), nXSize, nYSize, GDT_Byte, 
-												0, 0 );
+	if( poBand_ref->RasterIO( GF_Read, 0, 0, nXSize, nYSize, img_ref.data(), nXSize, nYSize, GDT_Byte, 0, 0 ) != CE_None )
+	{
+		std::fprintf(stderr,"  reading reference data failed.\n\n");
+		std::exit(1);
+	}
 
-	poBand->RasterIO( GF_Read, 0, 0, nXSize, nYSize, 
-										img.data(), nXSize, nYSize, GDT_Byte, 
-										0, 0 );
-	
+	if( poBand->RasterIO( GF_Read, 0, 0, nXSize, nYSize, img.data(), nXSize, nYSize, GDT_Byte, 0, 0 ) != CE_None )
+	{
+		std::fprintf(stderr,"  reading data failed.\n\n");
+		std::exit(1);
+	}
+
 	std::fprintf(stderr,"  generating distance fields...\n");
 
 	if (radius > 0)
@@ -188,9 +192,9 @@ int main(int argc,char **argv)
 	double min_ascale = 1.0e12;
 	double max_ascale = -1.0e12;
 
-	for (size_t py = 0; py < nYSize; py++)
+	for (int py = 0; py < nYSize; py++)
 	{
-		for (size_t px = 0; px < nXSize; px++)
+		for (int px = 0; px < nXSize; px++)
 		{
 			projUV dat_xy;
 			struct FACTORS facs;
@@ -267,11 +271,11 @@ int main(int argc,char **argv)
 	std::fprintf(stderr,"maximum area scaling: %.4f, minimum: %.4f\n", max_ascale, min_ascale);
 	std::fprintf(stderr,"maximum scaling: %.4f, minimum scaling: %.4f\n", max_scale, min_scale);
 
-	std::fprintf(stderr,"new in mask: %d normal pixel (%.2f sqkm)\n", cnt_l, area_l);
-	std::fprintf(stderr,"             %d isolated pixel (%.2f sqkm)\n", cnt_lx, area_lx);
-	std::fprintf(stderr,"new out of mask: %d normal pixel (%.2f sqkm)\n", cnt_w, area_w);
-	std::fprintf(stderr,"                 %d isolated pixel (%.2f sqkm)\n", cnt_wx, area_wx);
+	std::fprintf(stderr,"new in mask: %ld normal pixel (%.2f sqkm)\n", cnt_l, area_l);
+	std::fprintf(stderr,"             %ld isolated pixel (%.2f sqkm)\n", cnt_lx, area_lx);
+	std::fprintf(stderr,"new out of mask: %ld normal pixel (%.2f sqkm)\n", cnt_w, area_w);
+	std::fprintf(stderr,"                 %ld isolated pixel (%.2f sqkm)\n", cnt_wx, area_wx);
 	std::fprintf(stderr,"difference rating: %.8f (%.2f sqkm)\n", area_weighted/area_all, area_weighted);
-	std::fprintf(stdout,"short version: %d:%.2f:%d:%.2f:%d:%.2f:%d:%.2f:%.8f:%.2f\n", cnt_l, area_l, cnt_lx, area_lx, cnt_w, area_w, cnt_wx, area_wx, area_weighted/area_all, area_weighted);
+	std::fprintf(stdout,"short version: %ld:%.2f:%ld:%.2f:%ld:%.2f:%ld:%.2f:%.8f:%.2f\n", cnt_l, area_l, cnt_lx, area_lx, cnt_w, area_w, cnt_wx, area_wx, area_weighted/area_all, area_weighted);
 
 }

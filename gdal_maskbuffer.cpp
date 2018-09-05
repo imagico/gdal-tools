@@ -129,10 +129,12 @@ int main(int argc,char **argv)
 
 	std::fprintf(stderr,"  reading data...\n");
 
-	poBand->RasterIO( GF_Read, 0, 0, nXSize, nYSize, 
-										img.data(), nXSize, nYSize, GDT_Byte, 
-										0, 0 );
-	
+	if( poBand->RasterIO( GF_Read, 0, 0, nXSize, nYSize, img.data(), nXSize, nYSize, GDT_Byte, 0, 0 ) != CE_None )
+	{
+		std::fprintf(stderr,"  reading data failed.\n\n");
+		std::exit(1);
+	}
+
 	std::fprintf(stderr,"  generating distance field...\n");
 
 	if (radius > 0)
@@ -149,9 +151,9 @@ int main(int argc,char **argv)
 
 	double pixel_size = 0.5*(std::abs(adfGeoTransform[1])+std::abs(adfGeoTransform[5]));
 
-	for (size_t py = 0; py < nYSize; py++)
+	for (int py = 0; py < nYSize; py++)
 	{
-		for (size_t px = 0; px < nXSize; px++)
+		for (int px = 0; px < nXSize; px++)
 		{
 			projUV dat_xy;
 			struct FACTORS facs;
@@ -194,10 +196,12 @@ int main(int argc,char **argv)
 	}
 
 	std::fprintf(stderr,"    maximum scaling: %.4f, minimum scaling: %.4f\n", max_scale, min_scale);
-	std::fprintf(stderr,"    %d pixels changed\n", cntmod);
+	std::fprintf(stderr,"    %ld pixels changed\n", cntmod);
 	std::fprintf(stderr,"  writing data...\n");
 
-	poBand->RasterIO( GF_Write, 0, 0, nXSize, nYSize, 
-										img.data(), nXSize, nYSize, GDT_Byte, 
-										0, 0 );
+	if( poBand->RasterIO( GF_Write, 0, 0, nXSize, nYSize, img.data(), nXSize, nYSize, GDT_Byte, 0, 0 ) != CE_None )
+	{
+		std::fprintf(stderr,"  writing data failed.\n\n");
+		std::exit(1);
+	}
 }

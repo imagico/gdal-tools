@@ -36,6 +36,8 @@ does not take into account any periodicity of the projection used.
 Building requires GDAL and Proj4 development packages as well as
 [CImg](http://cimg.eu/).
 
+`gdal_maskbuffer_wm` is a simplified version of `gdal_maskbuffer` for web
+mercator projection that implements the scaling function without Proj4.
 
 gdal_maskcompare
 ----------------

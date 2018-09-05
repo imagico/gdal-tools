@@ -115,9 +115,11 @@ int main(int argc,char **argv)
 
 	std::fprintf(stderr,"  reading data...\n");
 
-	poDataset->RasterIO( GF_Read, 0, 0, nXSize, nYSize, 
-											 pData, nXSize, nYSize, GDT_Float32, 
-											 poDataset->GetRasterCount(), NULL, 0, 0, 0);
+	if( poDataset->RasterIO( GF_Read, 0, 0, nXSize, nYSize, pData, nXSize, nYSize, GDT_Float32, poDataset->GetRasterCount(), NULL, 0, 0, 0) != CE_None )
+	{
+		std::fprintf(stderr,"  reading data failed.\n\n");
+		std::exit(1);
+	}
 
 	std::fprintf(stderr,"  scaling values...\n");
 
@@ -125,9 +127,9 @@ int main(int argc,char **argv)
 	double max_scale = -1.0e12;
 
 	size_t cnterr = 0;
-	for (size_t py = 0; py < nYSize; py++)
+	for (int py = 0; py < nYSize; py++)
 	{
-		for (size_t px = 0; px < nXSize; px++)
+		for (int px = 0; px < nXSize; px++)
 		{
 			projUV dat_xy;
 			struct FACTORS facs;
@@ -141,7 +143,7 @@ int main(int argc,char **argv)
 
 			if (!facs_bad)
 			{
-				for (size_t band = 0; band < poDataset->GetRasterCount(); band++)
+				for (int band = 0; band < poDataset->GetRasterCount(); band++)
 				{
 					size_t i = poDataset->GetRasterCount()*(py*nXSize+px)+band;
 					pData[i] *= facs.s;
@@ -165,7 +167,9 @@ int main(int argc,char **argv)
 	std::fprintf(stderr,"    maximum scaling: %.4f, minimum scaling: %.4f\n", max_scale, min_scale);
 	std::fprintf(stderr,"  writing data...\n");
 
-	poDataset->RasterIO( GF_Write, 0, 0, nXSize, nYSize, 
-											 pData, nXSize, nYSize, GDT_Float32, 
-											 poDataset->GetRasterCount(), NULL, 0, 0, 0);
+	if( poDataset->RasterIO( GF_Write, 0, 0, nXSize, nYSize, pData, nXSize, nYSize, GDT_Float32, poDataset->GetRasterCount(), NULL, 0, 0, 0) != CE_None )
+	{
+		std::fprintf(stderr,"  writing data failed.\n\n");
+		std::exit(1);
+	}
 }
